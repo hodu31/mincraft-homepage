@@ -3,7 +3,7 @@ name: Deploy to S3 and CloudFront
 on:
   push:
     branches:
-      - main  # main 브랜치에 푸시될 때만 실행 (브랜치명이 master면 수정 필요)
+      - main
 
 jobs:
   deploy:
@@ -14,25 +14,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Node.js 세팅 (리액트 빌드용)
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18' # 프로젝트 버전에 맞게 수정
+      # (Node.js 설정 단계 삭제함: html 파일만 있어서 필요 없음)
 
-      # 4. AWS 접속 설정
+      # 2. AWS 접속 설정
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2 # 서울 리전 (다르면 수정)
+          aws-region: ap-northeast-2
 
-      # 5. S3에 파일 업로드 (기존 파일 삭제 후 덮어쓰기)
+      # 3. S3에 파일 업로드 (수정됨!)
       - name: Upload to S3
-        # ./dist 부분은 본인의 빌드 결과물 폴더명으로 맞춰주세요! (예: ./build)
-        run: aws s3 sync ./dist s3://${{ secrets.AWS_S3_BUCKET }} --delete
+        # 설명: ./dist 대신 현재 폴더(.)를 올리되, .git 같은 설정 파일은 제외(--exclude)합니다.
+        run: aws s3 sync . s3://${{ secrets.AWS_S3_BUCKET }} --delete --exclude ".git/*" --exclude ".github/*"
 
-      # 6. CloudFront 캐시 삭제 (사용자가 즉시 변경사항을 보도록)
+      # 4. CloudFront 캐시 삭제
       - name: Invalidate CloudFront Cache
         run: aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_ID }} --paths "/*"
