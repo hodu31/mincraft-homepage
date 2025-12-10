@@ -72,6 +72,30 @@
             background-color: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
         }
+
+        /* Table Styles */
+        .custom-table th {
+            text-align: left;
+            padding: 12px 16px;
+            background-color: #f9fafb;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .custom-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.875rem;
+            color: #111827;
+        }
+
+        .custom-table tr:last-child td {
+            border-bottom: none;
+        }
     </style>
 </head>
 
@@ -109,10 +133,9 @@
     </main>
 
     <!-- Create Server Modal -->
-    <div id="createModal" class="fixed inset-0 z-50 hidden">
+    <div id="createModal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
         <div class="modal-overlay absolute inset-0" onclick="app.closeModal()"></div>
-        <div
-            class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden fade-in">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden fade-in relative z-10 m-4">
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                 <h3 class="text-lg font-semibold text-gray-900">새 서버 만들기</h3>
                 <button onclick="app.closeModal()" class="text-gray-400 hover:text-gray-600">
@@ -131,18 +154,34 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">데이터 저장소 (PVC)</label>
                     <input type="text" id="inputPvcName" disabled
-                        class="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-500 cursor-not-allowed">
+                        class="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-500 cursor-not-allowed"
+                        placeholder="자동 생성됩니다">
                 </div>
 
+                <!-- Mods Selection (Dummy Data) -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">관리자 비밀번호 (ServerTap Key)</label>
-                    <div class="relative">
-                        <input type="password" id="inputServerKey"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all pr-10">
-                        <button onclick="app.togglePasswordVisibility('inputServerKey')"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                            <i class="ph ph-eye text-lg"></i>
-                        </button>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">모드 선택 (선택사항)</label>
+                    <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" class="form-checkbox text-indigo-600 rounded">
+                            <span class="text-sm text-gray-700">EssentialsX (기본 유틸리티)</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" class="form-checkbox text-indigo-600 rounded">
+                            <span class="text-sm text-gray-700">WorldEdit (월드 편집)</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" class="form-checkbox text-indigo-600 rounded">
+                            <span class="text-sm text-gray-700">LuckPerms (권한 관리)</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" class="form-checkbox text-indigo-600 rounded">
+                            <span class="text-sm text-gray-700">Vault (경제 API)</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" class="form-checkbox text-indigo-600 rounded">
+                            <span class="text-sm text-gray-700">Multiverse-Core (멀티월드)</span>
+                        </label>
                     </div>
                 </div>
 
@@ -213,16 +252,6 @@
 
             <div id="serverGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Server Cards injected here -->
-
-                <!-- Create New Card (Inline) -->
-                <div onclick="app.openModal()"
-                    class="bg-white rounded-xl border-2 border-dashed border-gray-300 p-6 flex flex-col items-center justify-center text-gray-400 hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 cursor-pointer transition-all min-h-[200px] group">
-                    <div
-                        class="w-16 h-16 rounded-full bg-gray-100 group-hover:bg-white flex items-center justify-center mb-4 transition-colors">
-                        <i class="ph-bold ph-plus text-3xl"></i>
-                    </div>
-                    <span class="font-medium">새 서버 만들기</span>
-                </div>
             </div>
         </div>
     </template>
@@ -263,7 +292,7 @@
                         <button onclick="app.switchTab('game')"
                             class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors font-medium bg-white text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
                             data-tab="game">
-                            <i class="ph-duotone ph-game-controller text-xl"></i> 인게임 관리
+                            <i class="ph-duotone ph-users-three text-xl"></i> 플레이어 및 관리
                         </button>
                         <button onclick="app.switchTab('settings')"
                             class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors font-medium bg-white text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
@@ -329,23 +358,70 @@
 
                     <!-- Game Management Tab -->
                     <div id="tab-game" class="tab-content hidden space-y-6">
-                        <div class="bg-gray-900 rounded-lg p-4 font-mono text-sm text-gray-300 h-96 overflow-y-auto"
-                            id="consoleOutput">
-                            <div class="text-gray-500">Connecting to server console...</div>
-                            <div class="text-yellow-500">Warning: ServerTap integration not yet active.</div>
-                        </div>
-                        <div class="flex gap-2">
-                            <input type="text" placeholder="명령어 입력..."
-                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
-                            <button
-                                class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 font-medium">전송</button>
+
+                        <!-- Global Actions -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Whitelist Toggle -->
+                            <div class="p-4 border border-gray-100 rounded-xl bg-gray-50">
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                    <i class="ph-fill ph-shield-check text-indigo-500"></i> 화이트리스트 관리
+                                </h4>
+                                <div class="flex gap-2 mb-3">
+                                    <button onclick="app.execCommand('whitelist on')"
+                                        class="flex-1 bg-green-100 text-green-700 py-2 rounded hover:bg-green-200 transition-colors font-medium text-sm">ON</button>
+                                    <button onclick="app.execCommand('whitelist off')"
+                                        class="flex-1 bg-red-100 text-red-700 py-2 rounded hover:bg-red-200 transition-colors font-medium text-sm">OFF</button>
+                                </div>
+                                <div class="flex gap-2">
+                                    <input type="text" id="whitelistAddInput" placeholder="유저명 추가..."
+                                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded outline-none focus:ring-1 focus:ring-indigo-500">
+                                    <button onclick="app.addToWhitelist()"
+                                        class="bg-indigo-600 text-white px-3 py-2 rounded hover:bg-indigo-700 text-sm">추가</button>
+                                </div>
+                            </div>
+
+                            <!-- Broadcast -->
+                            <div class="p-4 border border-gray-100 rounded-xl bg-gray-50">
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                    <i class="ph-fill ph-megaphone text-orange-500"></i> 전체 공지
+                                </h4>
+                                <div class="flex gap-2">
+                                    <input type="text" id="broadcastInput" placeholder="공지 메시지 입력..."
+                                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded outline-none focus:ring-1 focus:ring-orange-500">
+                                    <button onclick="app.broadcastMessage()"
+                                        class="bg-orange-500 text-white px-3 py-2 rounded hover:bg-orange-600 text-sm">전송</button>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="pt-6 border-t border-gray-100">
-                            <h3 class="text-lg font-bold text-gray-900 mb-4">플레이어 관리</h3>
-                            <div
-                                class="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                                현재 접속 중인 플레이어가 없습니다.
+                        <!-- Player List -->
+                        <div class="pt-4 border-t border-gray-100">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-bold text-gray-900">접속 중인 플레이어</h3>
+                                <button onclick="app.fetchPlayers()"
+                                    class="text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                                    <i class="ph-bold ph-arrows-clockwise"></i> 새로고침
+                                </button>
+                            </div>
+
+                            <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                                <table class="w-full custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>닉네임</th>
+                                            <th>UUID</th>
+                                            <th>체력</th>
+                                            <th>게임모드</th>
+                                            <th>관리</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="playerListBody">
+                                        <tr>
+                                            <td colspan="5" class="text-center py-8 text-gray-500">플레이어 목록을 불러오는 중...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -410,7 +486,6 @@
 
             setupRouting() {
                 // Simple routing based on hash or just initial check
-                // For now, state management handles views
             },
 
             checkLogin() {
@@ -533,18 +608,14 @@
                     let html = '';
 
                     if (this.state.servers.length === 0) {
-                        html += `
-                        <div class="col-span-full text-center py-10 text-gray-500">
-                            <p>생성된 서버가 없습니다.</p>
-                        </div>
-                        `;
+                        // Display nothing if empty except create button which we append below
                     } else {
                         this.state.servers.forEach(server => {
                             html += this.buildServerCard(server);
                         });
                     }
 
-                    // Append Create Card HTML
+                    // Append Create Card HTML (Centered Card)
                     html += `
                     <div onclick="app.openModal()" class="bg-white rounded-xl border-2 border-dashed border-gray-300 p-6 flex flex-col items-center justify-center text-gray-400 hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 cursor-pointer transition-all min-h-[200px] group shadow-sm hover:shadow-md">
                         <div class="w-16 h-16 rounded-full bg-gray-100 group-hover:bg-white flex items-center justify-center mb-4 transition-colors">
@@ -605,7 +676,8 @@
                 document.getElementById('createModal').classList.remove('hidden');
                 document.getElementById('inputPodName').value = '';
                 document.getElementById('inputPvcName').value = '';
-                document.getElementById('inputServerKey').value = '';
+                // Clear checkboxes
+                document.querySelectorAll('.form-checkbox').forEach(cb => cb.checked = false);
             },
 
             closeModal() {
@@ -620,24 +692,29 @@
                 }
                 // Auto-generate PVC name
                 if (cleanVal) {
-                    document.getElementById('inputPvcName').value = cleanVal + '-data';
+                    document.getElementById('inputPvcName').value = cleanVal + '-pvc';
                 } else {
                     document.getElementById('inputPvcName').value = '';
                 }
             },
 
-            togglePasswordVisibility(id) {
-                const el = document.getElementById(id);
-                el.type = el.type === 'password' ? 'text' : 'password';
+            generateRandomPassword() {
+                const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+                let pass = "";
+                for (let i = 0; i < 16; i++) {
+                    pass += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return pass;
             },
 
             async submitCreateServer() {
                 const podName = document.getElementById('inputPodName').value;
                 const pvcName = document.getElementById('inputPvcName').value;
-                const key = document.getElementById('inputServerKey').value;
+                // Generate secure random key in background since input is removed
+                const key = this.generateRandomPassword();
 
-                if (!podName || !key) {
-                    alert("모든 필드를 입력해주세요.");
+                if (!podName) {
+                    alert("서버 이름을 입력해주세요.");
                     return;
                 }
 
@@ -752,8 +829,6 @@
 
                     alert(`서버 ${action === 'start' ? '시작' : '정지'} 요청을 보냈습니다.`);
 
-                    // Refresh list logic to update actual status eventually
-                    // In a real app, we might poll for status change
                     setTimeout(() => {
                         this.navigateTo('dashboard'); // Go back to list to refresh
                     }, 2000);
@@ -781,6 +856,11 @@
                     content.classList.add('hidden');
                 });
                 document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+
+                // If switching to game tab, load players
+                if (tabName === 'game') {
+                    this.fetchPlayers();
+                }
             },
 
             initCharts() {
@@ -807,7 +887,7 @@
                     data: {
                         labels: Array(20).fill(''),
                         datasets: [{
-                            label: 'CPU',
+                            label: 'CPU Usage',
                             data: Array(20).fill(0),
                             borderColor: '#6366f1',
                             tension: 0.4,
@@ -836,7 +916,10 @@
                             pointRadius: 0
                         }]
                     },
-                    options: commonOptions
+                    options: {
+                        ...commonOptions,
+                        scales: { ...commonOptions.scales, y: { suggestedMax: 4 } } // Default max
+                    }
                 });
             },
 
@@ -844,7 +927,6 @@
                 if (!this.state.selectedServer) return;
 
                 try {
-                    // Pass pod_name as param
                     const data = await this.apiCall(`/server/status?pod_name=${this.state.selectedServer.DataId}`, 'GET');
 
                     if (data) {
@@ -861,12 +943,19 @@
             updateDashboard(data) {
                 // Update text stats
                 if (data.health) {
-                    const freeMemGB = (data.health.freeMemory / 1024 / 1024 / 1024).toFixed(1);
-                    const totalMemGB = (data.health.totalMemory / 1024 / 1024 / 1024).toFixed(1);
-                    const usedMemGB = (totalMemGB - freeMemGB).toFixed(1);
+                    const freeMemGB = (data.health.freeMemory / 1024 / 1024 / 1024).toFixed(2);
+                    const totalMemGB = (data.health.totalMemory / 1024 / 1024 / 1024).toFixed(2); // Max memory from health
+                    const usedMemGB = (totalMemGB - freeMemGB).toFixed(2);
 
-                    // Update Chart Data
-                    if (this.state.charts.memory) this.updateChart(this.state.charts.memory, parseFloat(usedMemGB));
+                    // Update Memory Chart
+                    if (this.state.charts.memory) {
+                        // Update max scale based on server total memory
+                        this.state.charts.memory.options.scales.y.suggestedMax = parseFloat(totalMemGB);
+                        this.updateChart(this.state.charts.memory, parseFloat(usedMemGB));
+                    }
+
+                    // Update CPU Chart
+                    // Assuming we don't have direct CPU % in health, stick to fake/random for now or use core count logic if available later
                     if (this.state.charts.cpu) this.updateChart(this.state.charts.cpu, Math.random() * 20 + 5);
 
                     // Update Uptime
@@ -876,11 +965,10 @@
 
                 document.getElementById('statPlayers').textContent = `${data.onlinePlayers} / ${data.maxPlayers}`;
 
-                // TPS/Health text
                 const tps = parseFloat(data.tps);
                 const healthEl = document.getElementById('statHealth');
                 if (tps >= 18) {
-                    healthEl.textContent = 'Excellent';
+                    healthEl.textContent = 'Good';
                     healthEl.className = 'text-2xl font-bold text-green-600';
                 } else if (tps >= 12) {
                     healthEl.textContent = 'Fair';
@@ -898,16 +986,142 @@
                 chart.update();
             },
 
+            // --- Game Management Logic ---
+
+            async fetchPlayers() {
+                if (!this.state.selectedServer) return;
+                const tbody = document.getElementById('playerListBody');
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">불러오는 중...</td></tr>';
+
+                try {
+                    const players = await this.apiCall(`/server/players?pod_name=${this.state.selectedServer.DataId}`, 'GET');
+
+                    if (!players || players.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">접속 중인 플레이어가 없습니다.</td></tr>';
+                        return;
+                    }
+
+                    let html = '';
+                    players.forEach(p => {
+                        html += `
+                        <tr>
+                            <td class="font-medium flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full ${p.op ? 'bg-red-500' : 'bg-green-500'}"></span>
+                                ${p.displayName}
+                            </td>
+                            <td class="font-mono text-xs text-gray-500">${p.uuid}</td>
+                            <td>${Math.round(p.health)} / 20</td>
+                            <td><span class="text-xs bg-gray-100 px-2 py-1 rounded">${p.gamemode}</span></td>
+                            <td>
+                                <div class="flex gap-1">
+                                    <button onclick="app.kickPlayer('${p.displayName}')" class="bg-red-50 text-red-600 hover:bg-red-100 px-2 py-1 rounded text-xs">Kick</button>
+                                    <button onclick="app.banPlayer('${p.displayName}')" class="bg-gray-800 text-white hover:bg-black px-2 py-1 rounded text-xs">Ban</button>
+                                </div>
+                            </td>
+                        </tr>
+                        `;
+                    });
+                    tbody.innerHTML = html;
+
+                } catch (error) {
+                    console.error("Fetch players error", error);
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-red-500 py-4">목록을 불러오지 못했습니다.</td></tr>';
+                }
+            },
+
+            async execCommand(cmd) {
+                if (!this.state.selectedServer) return;
+                try {
+                    await this.apiCall('/server/exec', 'POST', {
+                        pod_name: this.state.selectedServer.DataId,
+                        command: cmd
+                    });
+                    alert(`명령어 실행 성공: ${cmd}`);
+                } catch (error) {
+                    alert(`명령어 실패: ${error.message}`);
+                }
+            },
+
+            async addToWhitelist() {
+                const name = document.getElementById('whitelistAddInput').value.trim();
+                if (!name) return;
+
+                try {
+                    await this.apiCall('/server/whitelist', 'POST', {
+                        pod_name: this.state.selectedServer.DataId,
+                        name: name
+                    });
+                    alert(`${name} 님을 화이트리스트에 추가했습니다.`);
+                    document.getElementById('whitelistAddInput').value = '';
+                } catch (error) {
+                    alert(`추가 실패: ${error.message}`);
+                }
+            },
+
+            async broadcastMessage() {
+                const msg = document.getElementById('broadcastInput').value.trim();
+                if (!msg) return;
+
+                try {
+                    await this.apiCall('/server/chat/broadcast', 'POST', {
+                        pod_name: this.state.selectedServer.DataId,
+                        message: msg
+                    });
+                    alert("공지 전송 완료");
+                    document.getElementById('broadcastInput').value = '';
+                } catch (error) {
+                    alert(`전송 실패: ${error.message}`);
+                }
+            },
+
+            async kickPlayer(name) {
+                if (!confirm(`${name} 플레이어를 추방하시겠습니까?`)) return;
+                try {
+                    await this.apiCall('/server/player/kick', 'POST', {
+                        pod_name: this.state.selectedServer.DataId,
+                        name: name,
+                        reason: "관리자에 의해 추방되었습니다."
+                    });
+                    alert(`${name} 추방 완료`);
+                    this.fetchPlayers();
+                } catch (error) {
+                    alert(`추방 실패: ${error.message}`);
+                }
+            },
+
+            async banPlayer(name) {
+                if (!confirm(`${name} 플레이어를 영구 정지(Ban) 하시겠습니까?`)) return;
+                try {
+                    await this.apiCall('/server/ban', 'POST', { // Fixed endpoint based on provided text (exec/ban)
+                        pod_name: this.state.selectedServer.DataId,
+                        name: name
+                    });
+                    alert(`${name} 정지 완료`);
+                    this.fetchPlayers();
+                } catch (error) {
+                    // Try alternate endpoint if first fails, user provided confusing paths
+                    try {
+                        await this.apiCall('/server/exec', 'POST', { // Fallback to exec ban command if dedicated endpoint fails
+                            pod_name: this.state.selectedServer.DataId,
+                            command: `ban ${name}`
+                        });
+                        alert(`${name} 정지 완료 (Command)`);
+                        this.fetchPlayers();
+                    } catch (e) {
+                        alert(`정지 실패: ${error.message}`);
+                    }
+                }
+            },
+
             async confirmDeleteServer() {
                 const server = this.state.selectedServer;
                 const confirmMsg = `정말로 ${server.DataId} 서버를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`;
 
                 if (confirm(confirmMsg)) {
                     const podName = server.DataId;
-                    const pvcName = server.pvc_name; // Need to ensure we have this
+                    const pvcName = server.pvc_name;
 
                     try {
-                        // Query params
                         const params = new URLSearchParams({
                             pod_name: podName,
                             pvc_name: pvcName
@@ -927,11 +1141,10 @@
                 if (!this.state.tokens) throw new Error("No auth token");
 
                 const headers = {
-                    'Authorization': `Bearer ${this.state.tokens.id_token}`, // Spec says Bearer [Token]
+                    'Authorization': `Bearer ${this.state.tokens.id_token}`,
                     'Content-Type': 'application/json'
                 };
 
-                // Ensure endpoint starts with slash if not full URL
                 let url = endpoint.startsWith('http') ? endpoint : `${CONFIG.apiUrl}${endpoint}`;
 
                 const options = {
@@ -945,7 +1158,6 @@
 
                 const response = await fetch(url, options);
 
-                // Handle 204 No Content
                 if (response.status === 204) return null;
 
                 const text = await response.text();
@@ -953,7 +1165,8 @@
                 try {
                     data = JSON.parse(text);
                 } catch (e) {
-                    data = text;
+                    data = text; // If empty or string
+                    if (text === "") data = {}; // Handle empty OK response
                 }
 
                 if (!response.ok) {
@@ -970,7 +1183,7 @@
             }
         };
 
-        // --- Global Functions for initial Auth (Legacy support) ---
+        // --- Global Functions for initial Auth ---
 
         function login() {
             const scopes = CONFIG.scope.split(' ').join('+');
@@ -1008,10 +1221,7 @@
 
                 const tokens = await response.json();
                 localStorage.setItem('tokens', JSON.stringify(tokens));
-
-                // Clear URL
                 window.history.replaceState({}, document.title, window.location.pathname);
-
                 app.setSession(tokens);
 
             } catch (error) {
@@ -1025,15 +1235,12 @@
             if (!idToken) return alert('Token required');
 
             try {
-                // Validate basic structure
                 parseJwt(idToken);
-
                 const tokens = {
                     id_token: idToken,
                     access_token: 'dummy',
                     refresh_token: 'dummy'
                 };
-
                 localStorage.setItem('tokens', JSON.stringify(tokens));
                 app.setSession(tokens);
             } catch (e) {
@@ -1054,12 +1261,10 @@
             }
         }
 
-        // Initialize App
         window.onload = function () {
             app.init();
         };
-
     </script>
 </body>
 
-</html>s
+</html>
