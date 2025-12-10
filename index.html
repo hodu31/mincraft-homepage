@@ -359,39 +359,104 @@
                     <!-- Game Management Tab -->
                     <div id="tab-game" class="tab-content hidden space-y-6">
 
-                        <!-- Global Actions -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Whitelist Toggle -->
-                            <div class="p-4 border border-gray-100 rounded-xl bg-gray-50">
-                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                    <i class="ph-fill ph-shield-check text-indigo-500"></i> 화이트리스트 관리
-                                </h4>
-                                <div class="flex gap-2 mb-3">
-                                    <button onclick="app.execCommand('whitelist on')"
-                                        class="flex-1 bg-green-100 text-green-700 py-2 rounded hover:bg-green-200 transition-colors font-medium text-sm">ON</button>
-                                    <button onclick="app.execCommand('whitelist off')"
-                                        class="flex-1 bg-red-100 text-red-700 py-2 rounded hover:bg-red-200 transition-colors font-medium text-sm">OFF</button>
+                        <!-- Lists Grid -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                            <!-- Whitelist Management -->
+                            <div class="border border-gray-200 rounded-xl bg-white flex flex-col h-[400px]">
+                                <div
+                                    class="p-4 border-b border-gray-100 bg-gray-50 rounded-t-xl flex justify-between items-center">
+                                    <h4 class="font-semibold text-gray-700 flex items-center gap-2">
+                                        <i class="ph-fill ph-scroll text-indigo-500"></i> 화이트리스트
+                                    </h4>
+                                    <div class="flex gap-2">
+                                        <button onclick="app.execCommand('whitelist on')"
+                                            class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200 font-medium">ON</button>
+                                        <button onclick="app.execCommand('whitelist off')"
+                                            class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200 font-medium">OFF</button>
+                                        <button onclick="app.fetchWhitelist()"
+                                            class="text-gray-400 hover:text-indigo-600"><i
+                                                class="ph-bold ph-arrows-clockwise"></i></button>
+                                    </div>
                                 </div>
-                                <div class="flex gap-2">
-                                    <input type="text" id="whitelistAddInput" placeholder="유저명 추가..."
-                                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded outline-none focus:ring-1 focus:ring-indigo-500">
-                                    <button onclick="app.addToWhitelist()"
-                                        class="bg-indigo-600 text-white px-3 py-2 rounded hover:bg-indigo-700 text-sm">추가</button>
+                                <div class="p-4 border-b border-gray-100">
+                                    <div class="flex gap-2">
+                                        <input type="text" id="whitelistAddInput" placeholder="닉네임..."
+                                            class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded outline-none focus:ring-1 focus:ring-indigo-500">
+                                        <button onclick="app.addToWhitelist()"
+                                            class="bg-indigo-600 text-white px-3 py-2 rounded hover:bg-indigo-700 text-sm">추가</button>
+                                    </div>
+                                </div>
+                                <div class="flex-1 overflow-y-auto p-2 space-y-1" id="whitelistContent">
+                                    <div class="text-center text-gray-400 text-sm py-4">목록을 불러오세요</div>
                                 </div>
                             </div>
 
-                            <!-- Broadcast -->
-                            <div class="p-4 border border-gray-100 rounded-xl bg-gray-50">
-                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                    <i class="ph-fill ph-megaphone text-orange-500"></i> 전체 공지
-                                </h4>
-                                <div class="flex gap-2">
-                                    <input type="text" id="broadcastInput" placeholder="공지 메시지 입력..."
-                                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded outline-none focus:ring-1 focus:ring-orange-500">
-                                    <button onclick="app.broadcastMessage()"
-                                        class="bg-orange-500 text-white px-3 py-2 rounded hover:bg-orange-600 text-sm">전송</button>
+                            <!-- Ban List Management -->
+                            <div class="border border-gray-200 rounded-xl bg-white flex flex-col h-[400px]">
+                                <div
+                                    class="p-4 border-b border-gray-100 bg-gray-50 rounded-t-xl flex justify-between items-center">
+                                    <h4 class="font-semibold text-gray-700 flex items-center gap-2">
+                                        <i class="ph-fill ph-prohibit text-red-500"></i> 차단 목록 (Ban)
+                                    </h4>
+                                    <button onclick="app.fetchBanlist()" class="text-gray-400 hover:text-indigo-600"><i
+                                            class="ph-bold ph-arrows-clockwise"></i></button>
+                                </div>
+                                <div class="p-4 border-b border-gray-100">
+                                    <div class="flex gap-2">
+                                        <input type="text" id="banAddInput" placeholder="닉네임..."
+                                            class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded outline-none focus:ring-1 focus:ring-red-500">
+                                        <button onclick="app.manualBan()"
+                                            class="bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 text-sm">차단</button>
+                                    </div>
+                                </div>
+                                <div class="flex-1 overflow-y-auto p-2 space-y-1" id="banlistContent">
+                                    <div class="text-center text-gray-400 text-sm py-4">목록을 불러오세요</div>
                                 </div>
                             </div>
+
+                            <!-- OP / Broadcast -->
+                            <div class="flex flex-col gap-6 h-[400px]">
+                                <!-- OP Management -->
+                                <div class="border border-gray-200 rounded-xl bg-white flex-1 flex flex-col">
+                                    <div class="p-4 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+                                        <h4 class="font-semibold text-gray-700 flex items-center gap-2">
+                                            <i class="ph-fill ph-crown text-yellow-500"></i> 관리자 (OP) 설정
+                                        </h4>
+                                    </div>
+                                    <div class="p-4 flex flex-col gap-3">
+                                        <div class="text-xs text-gray-500">닉네임을 입력하여 관리자 권한을 부여하거나 제거합니다.</div>
+                                        <div class="flex gap-2">
+                                            <input type="text" id="opInput" placeholder="닉네임..."
+                                                class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded outline-none focus:ring-1 focus:ring-yellow-500">
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button onclick="app.manageOp('add')"
+                                                class="flex-1 bg-yellow-100 text-yellow-700 px-3 py-2 rounded hover:bg-yellow-200 text-sm font-medium">권한
+                                                부여</button>
+                                            <button onclick="app.manageOp('remove')"
+                                                class="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded hover:bg-gray-200 text-sm font-medium">권한
+                                                해제</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Broadcast -->
+                                <div class="border border-gray-200 rounded-xl bg-white flex-1 flex flex-col">
+                                    <div class="p-4 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+                                        <h4 class="font-semibold text-gray-700 flex items-center gap-2">
+                                            <i class="ph-fill ph-megaphone text-orange-500"></i> 전체 공지
+                                        </h4>
+                                    </div>
+                                    <div class="p-4 flex-1 flex flex-col justify-center gap-2">
+                                        <input type="text" id="broadcastInput" placeholder="공지 메시지 입력..."
+                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded outline-none focus:ring-1 focus:ring-orange-500">
+                                        <button onclick="app.broadcastMessage()"
+                                            class="w-full bg-orange-500 text-white px-3 py-2 rounded hover:bg-orange-600 text-sm">전송</button>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
 
                         <!-- Player List -->
@@ -857,9 +922,11 @@
                 });
                 document.getElementById(`tab-${tabName}`).classList.remove('hidden');
 
-                // If switching to game tab, load players
+                // If switching to game tab, load players and lists
                 if (tabName === 'game') {
                     this.fetchPlayers();
+                    this.fetchWhitelist();
+                    this.fetchBanlist();
                 }
             },
 
@@ -1042,6 +1109,43 @@
                 }
             },
 
+            // --- List Management (Whitelist/Ban/OP) ---
+
+            async fetchWhitelist() {
+                if (!this.state.selectedServer) return;
+                const container = document.getElementById('whitelistContent');
+                container.innerHTML = '<div class="text-center text-gray-500 text-xs py-2">로딩 중...</div>';
+
+                try {
+                    // API Spec: GET /server/whitelist?pod_name=...
+                    // Assuming it returns JSON array of strings or objects.
+                    const list = await this.apiCall(`/server/whitelist?pod_name=${this.state.selectedServer.DataId}`, 'GET');
+
+                    if (!list || list.length === 0) {
+                        container.innerHTML = '<div class="text-center text-gray-400 text-xs py-2">목록이 비어있습니다.</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    list.forEach(item => {
+                        // Handle if item is string or object
+                        const name = typeof item === 'string' ? item : (item.name || item.uuid);
+                        html += `
+                        <div class="flex justify-between items-center bg-gray-50 px-3 py-2 rounded border border-gray-100 text-sm">
+                            <span>${name}</span>
+                            <button onclick="app.removeFromWhitelist('${name}')" class="text-red-400 hover:text-red-600">
+                                <i class="ph-bold ph-trash"></i>
+                            </button>
+                        </div>`;
+                    });
+                    container.innerHTML = html;
+
+                } catch (error) {
+                    console.error(error);
+                    container.innerHTML = '<div class="text-center text-red-400 text-xs py-2">로드 실패</div>';
+                }
+            },
+
             async addToWhitelist() {
                 const name = document.getElementById('whitelistAddInput').value.trim();
                 if (!name) return;
@@ -1051,10 +1155,117 @@
                         pod_name: this.state.selectedServer.DataId,
                         name: name
                     });
-                    alert(`${name} 님을 화이트리스트에 추가했습니다.`);
+                    // Refresh list
                     document.getElementById('whitelistAddInput').value = '';
+                    this.fetchWhitelist();
                 } catch (error) {
                     alert(`추가 실패: ${error.message}`);
+                }
+            },
+
+            async removeFromWhitelist(name) {
+                if (!confirm(`'${name}' 님을 화이트리스트에서 제거하시겠습니까?`)) return;
+                try {
+                    // Assuming DELETE is not standard for whitelist items in this API (API doc didn't specify DELETE whitelist item)
+                    // Usually removing from whitelist is done via command or specific endpoint.
+                    // Let's try exec command as fallback if no DELETE endpoint.
+                    // But WAIT, standard MC command is 'whitelist remove <name>'.
+                    await this.apiCall('/server/exec', 'POST', {
+                        pod_name: this.state.selectedServer.DataId,
+                        command: `whitelist remove ${name}`
+                    });
+                    this.fetchWhitelist();
+                } catch (error) {
+                    alert(`제거 실패: ${error.message}`);
+                }
+            },
+
+            async fetchBanlist() {
+                if (!this.state.selectedServer) return;
+                const container = document.getElementById('banlistContent');
+                container.innerHTML = '<div class="text-center text-gray-500 text-xs py-2">로딩 중...</div>';
+
+                try {
+                    // API Spec: GET /server/ban?pod_name=... (As inferred from user prompt)
+                    const list = await this.apiCall(`/server/ban?pod_name=${this.state.selectedServer.DataId}`, 'GET');
+
+                    if (!list || list.length === 0) {
+                        container.innerHTML = '<div class="text-center text-gray-400 text-xs py-2">목록이 비어있습니다.</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    list.forEach(item => {
+                        const name = typeof item === 'string' ? item : (item.name || item.uuid);
+                        html += `
+                        <div class="flex justify-between items-center bg-red-50 px-3 py-2 rounded border border-red-100 text-sm">
+                            <span class="text-red-700">${name}</span>
+                            <button onclick="app.unbanPlayer('${name}')" class="text-gray-400 hover:text-green-600" title="차단 해제">
+                                <i class="ph-bold ph-arrow-u-up-left"></i>
+                            </button>
+                        </div>`;
+                    });
+                    container.innerHTML = html;
+
+                } catch (error) {
+                    console.error(error);
+                    container.innerHTML = '<div class="text-center text-red-400 text-xs py-2">로드 실패</div>';
+                }
+            },
+
+            async manualBan() {
+                const name = document.getElementById('banAddInput').value.trim();
+                if (!name) return;
+                this.banPlayer(name); // Reuse existing
+                document.getElementById('banAddInput').value = '';
+                // Wait a bit then refresh
+                setTimeout(() => this.fetchBanlist(), 1000);
+            },
+
+            async unbanPlayer(name) {
+                if (!confirm(`'${name}' 님의 차단을 해제하시겠습니까?`)) return;
+                try {
+                    await this.apiCall('/server/unban', 'POST', {
+                        pod_name: this.state.selectedServer.DataId,
+                        name: name
+                    });
+                    alert(`${name} 차단 해제 완료`);
+                    this.fetchBanlist();
+                } catch (error) {
+                    // Fallback command
+                    try {
+                        await this.apiCall('/server/exec', 'POST', {
+                            pod_name: this.state.selectedServer.DataId,
+                            command: `pardon ${name}`
+                        });
+                        this.fetchBanlist();
+                    } catch (e) {
+                        alert(`해제 실패: ${error.message}`);
+                    }
+                }
+            },
+
+            async manageOp(action) {
+                const name = document.getElementById('opInput').value.trim();
+                if (!name) return alert("닉네임을 입력해주세요.");
+
+                const endpoint = '/server/op';
+                const method = action === 'add' ? 'POST' : 'DELETE';
+                const actionName = action === 'add' ? '부여' : '해제';
+
+                if (!confirm(`${name} 님에게 관리자 권한을 ${actionName}하시겠습니까?`)) return;
+
+                try {
+                    await this.apiCall(endpoint, method, {
+                        pod_name: this.state.selectedServer.DataId,
+                        name: name
+                    });
+                    alert(`관리자 권한 ${actionName} 완료`);
+                    document.getElementById('opInput').value = '';
+                    // Refresh player list as it shows OP status
+                    this.fetchPlayers();
+                } catch (error) {
+                    alert(`${actionName} 실패: ${error.message}`);
                 }
             },
 
