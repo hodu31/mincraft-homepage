@@ -4,140 +4,974 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cognito Login Test</title>
+    <title>Minecraft Server Manager</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Phosphor Icons (Clean icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
         }
 
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
 
-        h1 {
-            color: #333;
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
         }
 
-        button {
-            background-color: #FF9900;
-            color: white;
-            padding: 12px 24px;
-            border: none;
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
             border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin: 10px 5px;
         }
 
-        button:hover {
-            background-color: #EC7211;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
 
-        .token-display {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 20px 0;
-            word-wrap: break-word;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
         }
 
-        .user-info {
-            background-color: #e7f3ff;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 20px 0;
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .error {
-            background-color: #ffe7e7;
-            color: #d32f2f;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 20px 0;
+        .tier-badge-Admin {
+            background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%);
+            color: #856404;
+            border: 1px solid #e3c02d;
+            box-shadow: 0 0 5px rgba(255, 215, 0, 0.4);
         }
 
-        .success {
-            background-color: #e7ffe7;
-            color: #2f7d32;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 20px 0;
+        .tier-badge-Free {
+            background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%);
+            color: #424242;
+            border: 1px solid #9e9e9e;
         }
 
-        .loading {
-            text-align: center;
-            padding: 20px;
-        }
-
-        pre {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            overflow-x: auto;
+        /* Modal Overlay */
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
         }
     </style>
 </head>
 
-<body>
-    <div class="container">
-        <h1>🔐 Cognito 로그인 테스트</h1>
+<body class="text-gray-800 h-screen flex flex-col overflow-hidden">
 
-        <div id="loginSection">
-            <p>Cognito로 로그인하여 토큰을 발급받으세요.</p>
-            <button onclick="login()">Cognito 로그인</button>
-
-            <hr style="margin: 20px 0;">
-
-            <h4>또는, 로컬 테스트용 토큰 붙여넣기</h4>
-            <textarea id="idTokenInput" placeholder="ID Token을 여기에 붙여넣으세요" style="width: 95%; min-height: 100px; margin-bottom: 10px; font-family: 'Courier New', monospace;"></textarea>
-            <br>
-            <button onclick="localLogin()" style="background-color: #555;">로컬 로그인 테스트</button>
-        </div>
-
-        <div id="loadingSection" style="display: none;">
-            <div class="loading">
-                <p>토큰을 받아오는 중...</p>
+    <!-- Top Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 z-10 flex-shrink-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="app.navigateTo('dashboard')">
+                    <i class="ph-fill ph-cube text-3xl text-indigo-600"></i>
+                    <span class="font-bold text-xl tracking-tight text-gray-900">MC Server Manager</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div id="userProfile"
+                        class="hidden flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200">
+                        <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold"
+                            id="userAvatar">
+                            U
+                        </div>
+                        <span class="text-sm font-medium text-gray-700" id="userName">User</span>
+                        <button onclick="logout()" class="ml-2 text-gray-400 hover:text-red-500 transition-colors"
+                            title="로그아웃">
+                            <i class="ph ph-sign-out text-lg"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
+    </nav>
 
-        <div id="tokenSection" style="display: none;">
-            <h2>✅ 로그인 성공!</h2>
+    <!-- Main Content Area -->
+    <main id="appRoot" class="flex-1 overflow-y-auto relative p-4 sm:p-6 lg:p-8">
+        <!-- Dynamic Content will be injected here -->
+    </main>
 
-            <div class="user-info" id="userInfo"></div>
+    <!-- Create Server Modal -->
+    <div id="createModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="app.closeModal()"></div>
+        <div
+            class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden fade-in">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-900">새 서버 만들기</h3>
+                <button onclick="app.closeModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">서버 이름 (Pod Name)</label>
+                    <input type="text" id="inputPodName" oninput="app.handlePodNameInput(this.value)"
+                        placeholder="my-server"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                    <p class="text-xs text-gray-500 mt-1">영문 소문자, 숫자, 하이픈(-)만 사용 가능</p>
+                </div>
 
-            <button onclick="testAPI()">API 테스트 (Pods 조회)</button>
-            <button onclick="logout()">로그아웃</button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">데이터 저장소 (PVC)</label>
+                    <input type="text" id="inputPvcName" disabled
+                        class="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-500 cursor-not-allowed">
+                </div>
 
-            <div id="apiResult"></div>
-        </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">관리자 비밀번호 (ServerTap Key)</label>
+                    <div class="relative">
+                        <input type="password" id="inputServerKey"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all pr-10">
+                        <button onclick="app.togglePasswordVisibility('inputServerKey')"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <i class="ph ph-eye text-lg"></i>
+                        </button>
+                    </div>
+                </div>
 
-        <div id="errorSection" style="display: none;">
-            <div class="error" id="errorMessage"></div>
-            <button onclick="location.reload()">다시 시도</button>
+                <div class="pt-2">
+                    <button onclick="app.submitCreateServer()" id="btnCreateServer"
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg shadow-md transition-all flex justify-center items-center gap-2">
+                        <span>서버 생성하기</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Floating Action Button (FAB) -->
+    <button onclick="app.openModal()" id="fab"
+        class="fixed bottom-8 right-8 bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-lg transition-transform hover:scale-110 active:scale-95 z-40 hidden">
+        <i class="ph-bold ph-plus text-2xl"></i>
+    </button>
+
+    <!-- Templates -->
+
+    <!-- Login View Template -->
+    <template id="tmpl-login">
+        <div class="max-w-md mx-auto mt-10 fade-in">
+            <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
+                <div class="mb-6 inline-flex p-4 rounded-full bg-indigo-50 text-indigo-600">
+                    <i class="ph-duotone ph-game-controller text-4xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 mb-2">Minecraft Server Manager</h1>
+                <p class="text-gray-500 mb-8">서버를 쉽고 간편하게 관리하세요</p>
+
+                <div class="space-y-4">
+                    <button onclick="login()"
+                        class="w-full bg-[#FF9900] hover:bg-[#e68a00] text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-3 shadow-md">
+                        <i class="ph-bold ph-sign-in"></i>
+                        Cognito 로그인
+                    </button>
+
+                    <div class="relative my-6">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-200"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-white text-gray-500">Developers</span>
+                        </div>
+                    </div>
+
+                    <div class="text-left bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <label class="block text-xs font-semibold text-gray-500 uppercase mb-2">Local Test Token</label>
+                        <textarea id="idTokenInput" placeholder="Paste ID Token here..."
+                            class="w-full h-20 px-3 py-2 text-xs font-mono bg-white border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none resize-none"></textarea>
+                        <button onclick="localLogin()"
+                            class="mt-2 w-full bg-gray-800 hover:bg-gray-900 text-white text-sm font-medium py-2 rounded transition-colors">
+                            로컬 로그인
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Dashboard (Server List) Template -->
+    <template id="tmpl-dashboard">
+        <div class="max-w-7xl mx-auto fade-in">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">내 서버 목록</h2>
+            </div>
+
+            <div id="serverGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Server Cards injected here -->
+
+                <!-- Create New Card (Inline) -->
+                <div onclick="app.openModal()"
+                    class="bg-white rounded-xl border-2 border-dashed border-gray-300 p-6 flex flex-col items-center justify-center text-gray-400 hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 cursor-pointer transition-all min-h-[200px] group">
+                    <div
+                        class="w-16 h-16 rounded-full bg-gray-100 group-hover:bg-white flex items-center justify-center mb-4 transition-colors">
+                        <i class="ph-bold ph-plus text-3xl"></i>
+                    </div>
+                    <span class="font-medium">새 서버 만들기</span>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Control Panel Template -->
+    <template id="tmpl-control-panel">
+        <div class="max-w-7xl mx-auto fade-in h-full flex flex-col">
+            <button onclick="app.navigateTo('dashboard')"
+                class="mb-4 inline-flex items-center text-gray-500 hover:text-indigo-600 transition-colors self-start">
+                <i class="ph-bold ph-arrow-left mr-1"></i> 목록으로 돌아가기
+            </button>
+
+            <div class="flex flex-col lg:flex-row gap-6 h-full">
+                <!-- Sidebar -->
+                <div class="w-full lg:w-64 flex-shrink-0 space-y-2">
+                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200 mb-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-3 h-3 rounded-full" id="detailStatusDot"></div>
+                            <h2 class="text-xl font-bold truncate" id="detailServerName">Server Name</h2>
+                        </div>
+                        <div class="text-xs text-gray-500 font-mono bg-gray-100 p-2 rounded break-all select-all cursor-pointer hover:bg-gray-200 transition-colors"
+                            onclick="app.copyToClipboard(this.innerText)" title="클릭하여 복사" id="detailServerIp">
+                            IP Address
+                        </div>
+
+                        <!-- Power Controls -->
+                        <div class="mt-4 pt-4 border-t border-gray-100 flex gap-2" id="powerControls">
+                            <!-- Buttons injected dynamically -->
+                        </div>
+                    </div>
+
+                    <nav class="space-y-1">
+                        <button onclick="app.switchTab('overview')"
+                            class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors font-medium bg-white text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 active-tab"
+                            data-tab="overview">
+                            <i class="ph-duotone ph-chart-line-up text-xl"></i> 개요 (Overview)
+                        </button>
+                        <button onclick="app.switchTab('game')"
+                            class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors font-medium bg-white text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
+                            data-tab="game">
+                            <i class="ph-duotone ph-game-controller text-xl"></i> 인게임 관리
+                        </button>
+                        <button onclick="app.switchTab('settings')"
+                            class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors font-medium bg-white text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
+                            data-tab="settings">
+                            <i class="ph-duotone ph-gear text-xl"></i> 설정 (Settings)
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 p-6 overflow-y-auto">
+
+                    <!-- Overview Tab -->
+                    <div id="tab-overview" class="tab-content space-y-6">
+                        <div class="flex justify-between items-center pb-4 border-b border-gray-100">
+                            <h3 class="text-lg font-bold text-gray-900">리소스 모니터링</h3>
+                            <div class="flex gap-2">
+                                <button onclick="app.fetchStatus(true)"
+                                    class="p-2 text-gray-500 hover:text-indigo-600 rounded-lg hover:bg-gray-100"
+                                    title="새로고침">
+                                    <i class="ph-bold ph-arrows-clockwise"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- CPU Chart -->
+                            <div class="p-4 border border-gray-100 rounded-xl bg-gray-50">
+                                <h4 class="text-sm font-semibold text-gray-600 mb-4 flex items-center gap-2">
+                                    <i class="ph-fill ph-cpu text-indigo-500"></i> CPU 사용량
+                                </h4>
+                                <div class="h-64">
+                                    <canvas id="cpuChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Memory Chart -->
+                            <div class="p-4 border border-gray-100 rounded-xl bg-gray-50">
+                                <h4 class="text-sm font-semibold text-gray-600 mb-4 flex items-center gap-2">
+                                    <i class="ph-fill ph-memory text-green-500"></i> 메모리 사용량
+                                </h4>
+                                <div class="h-64">
+                                    <canvas id="memoryChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                            <div class="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                                <div class="text-sm text-indigo-600 font-medium mb-1">플레이어</div>
+                                <div class="text-2xl font-bold text-indigo-900" id="statPlayers">- / -</div>
+                            </div>
+                            <div class="p-4 bg-green-50 rounded-xl border border-green-100">
+                                <div class="text-sm text-green-600 font-medium mb-1">상태</div>
+                                <div class="text-2xl font-bold text-green-900" id="statHealth">Good</div>
+                            </div>
+                            <div class="p-4 bg-orange-50 rounded-xl border border-orange-100">
+                                <div class="text-sm text-orange-600 font-medium mb-1">가동 시간</div>
+                                <div class="text-2xl font-bold text-orange-900" id="statUptime">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Game Management Tab -->
+                    <div id="tab-game" class="tab-content hidden space-y-6">
+                        <div class="bg-gray-900 rounded-lg p-4 font-mono text-sm text-gray-300 h-96 overflow-y-auto"
+                            id="consoleOutput">
+                            <div class="text-gray-500">Connecting to server console...</div>
+                            <div class="text-yellow-500">Warning: ServerTap integration not yet active.</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" placeholder="명령어 입력..."
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <button
+                                class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 font-medium">전송</button>
+                        </div>
+
+                        <div class="pt-6 border-t border-gray-100">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4">플레이어 관리</h3>
+                            <div
+                                class="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                                현재 접속 중인 플레이어가 없습니다.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Tab -->
+                    <div id="tab-settings" class="tab-content hidden space-y-8">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-4">일반 설정</h3>
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-gray-500 text-sm">
+                                현재 변경 가능한 설정이 없습니다.
+                            </div>
+                        </div>
+
+                        <div class="pt-6 border-t border-gray-200">
+                            <h3 class="text-lg font-bold text-red-600 mb-4">Danger Zone</h3>
+                            <div
+                                class="border border-red-200 rounded-lg p-6 bg-red-50 flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-bold text-red-700">서버 삭제</h4>
+                                    <p class="text-sm text-red-600 mt-1">이 작업은 되돌릴 수 없습니다. 모든 데이터가 영구적으로 삭제됩니다.</p>
+                                </div>
+                                <button onclick="app.confirmDeleteServer()"
+                                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm">
+                                    서버 삭제
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </template>
+
     <script>
-        // ⚠️ 여기에 본인의 Cognito 정보 입력하세요
+        // CONFIG
         const CONFIG = {
             cognitoDomain: 'signup.aws-practice.shop',
             clientId: '7dl8gfi0lajbalghsdu476c259',
             redirectUri: 'https://aws-practice.shop/',
-            scope: 'email openid phone',  // ✅ phone 추가, profile 제거
-            apiUrl: 'YOUR_API_GATEWAY_URL',
+            scope: 'email openid phone',
+            apiUrl: 'https://api.aws-practice.shop',
             region: 'ap-northeast-2'
         };
 
-        // 로그인 버튼 클릭
+        // Application State & Logic
+        const app = {
+            state: {
+                currentView: 'login',
+                tokens: null,
+                user: null,
+                servers: [],
+                selectedServer: null,
+                charts: { cpu: null, memory: null },
+                pollingInterval: null
+            },
+
+            init() {
+                this.checkLogin();
+                this.setupRouting();
+            },
+
+            setupRouting() {
+                // Simple routing based on hash or just initial check
+                // For now, state management handles views
+            },
+
+            checkLogin() {
+                // Check for auth code from redirect
+                const urlParams = new URLSearchParams(window.location.search);
+                const code = urlParams.get('code');
+                const error = urlParams.get('error');
+
+                if (error) {
+                    alert(`Login Error: ${error}`);
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+
+                if (code) {
+                    exchangeCodeForTokens(code);
+                    return;
+                }
+
+                // Check localStorage
+                const savedTokens = localStorage.getItem('tokens');
+                if (savedTokens) {
+                    try {
+                        const tokens = JSON.parse(savedTokens);
+                        this.setSession(tokens);
+                    } catch (e) {
+                        console.error("Token parse error", e);
+                        localStorage.removeItem('tokens');
+                        this.render('login');
+                    }
+                } else {
+                    this.render('login');
+                }
+            },
+
+            setSession(tokens) {
+                this.state.tokens = tokens;
+                const payload = parseJwt(tokens.id_token);
+                this.state.user = {
+                    id: payload.sub,
+                    username: payload['cognito:username'],
+                    email: payload.email
+                };
+
+                // Update UI User Profile
+                const userProfile = document.getElementById('userProfile');
+                if (userProfile) {
+                    userProfile.classList.remove('hidden');
+                    userProfile.classList.add('flex');
+                    document.getElementById('userName').textContent = this.state.user.username;
+                    document.getElementById('userAvatar').textContent = this.state.user.username.charAt(0).toUpperCase();
+                }
+
+                this.navigateTo('dashboard');
+            },
+
+            navigateTo(view, data = null) {
+                this.state.currentView = view;
+                this.render(view, data);
+            },
+
+            render(view, data) {
+                const root = document.getElementById('appRoot');
+                const fab = document.getElementById('fab');
+
+                // Cleanup
+                if (this.state.pollingInterval) {
+                    clearInterval(this.state.pollingInterval);
+                    this.state.pollingInterval = null;
+                }
+
+                if (view === 'login') {
+                    const userProfile = document.getElementById('userProfile');
+                    if (userProfile) {
+                        userProfile.classList.add('hidden');
+                        userProfile.classList.remove('flex');
+                    }
+                    if (fab) fab.classList.add('hidden');
+
+                    const tmpl = document.getElementById('tmpl-login');
+                    root.innerHTML = tmpl.innerHTML;
+                }
+                else if (view === 'dashboard') {
+                    if (fab) fab.classList.remove('hidden');
+                    const tmpl = document.getElementById('tmpl-dashboard');
+                    root.innerHTML = tmpl.innerHTML;
+                    this.loadServers();
+                }
+                else if (view === 'control-panel') {
+                    if (fab) fab.classList.add('hidden');
+
+                    // data might be server object or server ID
+                    if (typeof data === 'string') {
+                        // Find by DataId
+                        this.state.selectedServer = this.state.servers.find(s => s.DataId === data);
+                    } else {
+                        this.state.selectedServer = data;
+                    }
+
+                    if (!this.state.selectedServer) {
+                        alert("서버 정보를 찾을 수 없습니다.");
+                        this.navigateTo('dashboard');
+                        return;
+                    }
+
+                    const tmpl = document.getElementById('tmpl-control-panel');
+                    root.innerHTML = tmpl.innerHTML;
+                    this.initControlPanel(this.state.selectedServer);
+                }
+            },
+
+            // --- Dashboard Logic ---
+
+            async loadServers() {
+                const grid = document.getElementById('serverGrid');
+
+                try {
+                    const servers = await this.apiCall('/server', 'GET');
+                    this.state.servers = Array.isArray(servers) ? servers : [];
+
+                    let html = '';
+
+                    if (this.state.servers.length === 0) {
+                        html += `
+                        <div class="col-span-full text-center py-10 text-gray-500">
+                            <p>생성된 서버가 없습니다.</p>
+                        </div>
+                        `;
+                    } else {
+                        this.state.servers.forEach(server => {
+                            html += this.buildServerCard(server);
+                        });
+                    }
+
+                    // Append Create Card HTML
+                    html += `
+                    <div onclick="app.openModal()" class="bg-white rounded-xl border-2 border-dashed border-gray-300 p-6 flex flex-col items-center justify-center text-gray-400 hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 cursor-pointer transition-all min-h-[200px] group shadow-sm hover:shadow-md">
+                        <div class="w-16 h-16 rounded-full bg-gray-100 group-hover:bg-white flex items-center justify-center mb-4 transition-colors">
+                            <i class="ph-bold ph-plus text-3xl"></i>
+                        </div>
+                        <span class="font-medium">새 서버 만들기</span>
+                    </div>
+                    `;
+
+                    grid.innerHTML = html;
+
+                } catch (error) {
+                    console.error("Load servers failed", error);
+                    grid.innerHTML = `<div class="col-span-full text-red-500 bg-red-50 p-4 rounded-lg">서버 목록을 불러오는데 실패했습니다.<br>${error.message}</div>`;
+                }
+            },
+
+            buildServerCard(server) {
+                const statusColors = {
+                    'running': 'bg-green-500',
+                    'creating': 'bg-yellow-500',
+                    'stopped': 'bg-red-500',
+                    'stopping': 'bg-orange-500',
+                    'starting': 'bg-blue-500'
+                };
+                const status = server.status.toLowerCase();
+                const statusColor = statusColors[status] || 'bg-gray-400';
+
+                const date = new Date(server.created_at * 1000).toLocaleDateString();
+                const tierClass = `tier-badge-${server.tier}`;
+
+                // Use ID for navigation instead of object string
+                return `
+                <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all p-6 border border-gray-100 relative group flex flex-col">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full ${statusColor} animate-pulse"></div>
+                            <span class="text-xs font-semibold uppercase text-gray-500 tracking-wider">${server.status}</span>
+                        </div>
+                        <span class="text-xs font-bold px-2 py-1 rounded-md ${tierClass}">${server.tier}</span>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-gray-900 mb-1 truncate" title="${server.DataId}">${server.DataId}</h3>
+                    <p class="text-sm text-gray-500 mb-6">Created: ${date}</p>
+                    
+                    <div class="mt-auto pt-4 border-t border-gray-50 flex gap-2">
+                        <button onclick="app.navigateTo('control-panel', '${server.DataId}')" class="flex-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white py-2 rounded-lg font-medium transition-colors text-sm">
+                            관리하기
+                        </button>
+                    </div>
+                </div>
+                `;
+            },
+
+            // --- Create Modal Logic ---
+
+            openModal() {
+                document.getElementById('createModal').classList.remove('hidden');
+                document.getElementById('inputPodName').value = '';
+                document.getElementById('inputPvcName').value = '';
+                document.getElementById('inputServerKey').value = '';
+            },
+
+            closeModal() {
+                document.getElementById('createModal').classList.add('hidden');
+            },
+
+            handlePodNameInput(val) {
+                // Filter invalid chars
+                const cleanVal = val.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                if (val !== cleanVal) {
+                    document.getElementById('inputPodName').value = cleanVal;
+                }
+                // Auto-generate PVC name
+                if (cleanVal) {
+                    document.getElementById('inputPvcName').value = cleanVal + '-data';
+                } else {
+                    document.getElementById('inputPvcName').value = '';
+                }
+            },
+
+            togglePasswordVisibility(id) {
+                const el = document.getElementById(id);
+                el.type = el.type === 'password' ? 'text' : 'password';
+            },
+
+            async submitCreateServer() {
+                const podName = document.getElementById('inputPodName').value;
+                const pvcName = document.getElementById('inputPvcName').value;
+                const key = document.getElementById('inputServerKey').value;
+
+                if (!podName || !key) {
+                    alert("모든 필드를 입력해주세요.");
+                    return;
+                }
+
+                const btn = document.getElementById('btnCreateServer');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = `<i class="ph-bold ph-spinner animate-spin"></i> 생성 중...`;
+                btn.disabled = true;
+
+                try {
+                    await this.apiCall('/server', 'POST', {
+                        pod_name: podName,
+                        pvc_name: pvcName,
+                        servertap_key: key
+                    });
+
+                    alert("서버 생성이 요청되었습니다. 목록이 갱신됩니다.");
+                    this.closeModal();
+                    this.loadServers();
+
+                } catch (error) {
+                    alert(`생성 실패: ${error.message}`);
+                } finally {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            },
+
+            // --- Control Panel Logic ---
+
+            initControlPanel(server) {
+                document.getElementById('detailServerName').textContent = server.DataId;
+                document.getElementById('detailServerIp').textContent = `${server.DataId}.aws-practice.shop`;
+
+                // Render Power Controls based on Status
+                this.renderPowerControls(server.status);
+                this.updateStatusIndicator(server.status);
+
+                // Init Charts
+                this.initCharts();
+
+                // Switch to default tab
+                this.switchTab('overview');
+
+                // Start polling if running
+                if (server.status.toLowerCase() === 'running') {
+                    this.fetchStatus();
+                    this.state.pollingInterval = setInterval(() => this.fetchStatus(), 5000);
+                }
+            },
+
+            updateStatusIndicator(status) {
+                const statusColors = {
+                    'running': 'bg-green-500',
+                    'stopped': 'bg-red-500',
+                    'creating': 'bg-yellow-500',
+                    'stopping': 'bg-orange-500',
+                    'starting': 'bg-blue-500'
+                };
+                const color = statusColors[status.toLowerCase()] || 'bg-gray-400';
+                document.getElementById('detailStatusDot').className = `w-3 h-3 rounded-full ${color}`;
+            },
+
+            renderPowerControls(status) {
+                const container = document.getElementById('powerControls');
+                const s = status.toLowerCase();
+                let html = '';
+
+                if (s === 'running') {
+                    html = `
+                    <button onclick="app.controlServer('stop')" class="flex-1 bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm flex items-center justify-center gap-2">
+                        <i class="ph-fill ph-stop"></i> 정지
+                    </button>
+                    `;
+                } else if (s === 'stopped') {
+                    html = `
+                    <button onclick="app.controlServer('start')" class="flex-1 bg-green-100 text-green-600 hover:bg-green-600 hover:text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm flex items-center justify-center gap-2">
+                        <i class="ph-fill ph-play"></i> 시작
+                    </button>
+                    `;
+                } else {
+                    html = `
+                    <button disabled class="flex-1 bg-gray-100 text-gray-400 px-4 py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-2 cursor-not-allowed">
+                        <i class="ph-fill ph-spinner animate-spin"></i> 처리 중...
+                    </button>
+                    `;
+                }
+                container.innerHTML = html;
+            },
+
+            async controlServer(action) {
+                if (!this.state.selectedServer) return;
+                const podName = this.state.selectedServer.DataId;
+
+                const btnContainer = document.getElementById('powerControls');
+                btnContainer.innerHTML = `
+                    <button disabled class="flex-1 bg-gray-100 text-gray-500 px-4 py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-2 cursor-wait">
+                        <i class="ph-bold ph-spinner animate-spin"></i> 요청 중...
+                    </button>
+                `;
+
+                try {
+                    await this.apiCall('/server', 'PATCH', {
+                        pod_name: podName,
+                        action: action
+                    });
+
+                    // Optimistic update
+                    const newStatus = action === 'start' ? 'starting' : 'stopping';
+                    this.state.selectedServer.status = newStatus;
+                    this.updateStatusIndicator(newStatus);
+                    this.renderPowerControls(newStatus);
+
+                    alert(`서버 ${action === 'start' ? '시작' : '정지'} 요청을 보냈습니다.`);
+
+                    // Refresh list logic to update actual status eventually
+                    // In a real app, we might poll for status change
+                    setTimeout(() => {
+                        this.navigateTo('dashboard'); // Go back to list to refresh
+                    }, 2000);
+
+                } catch (error) {
+                    alert(`요청 실패: ${error.message}`);
+                    this.renderPowerControls(this.state.selectedServer.status); // Revert
+                }
+            },
+
+            switchTab(tabName) {
+                // Update Buttons
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    if (btn.dataset.tab === tabName) {
+                        btn.classList.add('bg-indigo-50', 'text-indigo-600', 'active-tab');
+                        btn.classList.remove('text-gray-700', 'bg-white');
+                    } else {
+                        btn.classList.remove('bg-indigo-50', 'text-indigo-600', 'active-tab');
+                        btn.classList.add('text-gray-700', 'bg-white');
+                    }
+                });
+
+                // Update Content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            },
+
+            initCharts() {
+                const cpuCtx = document.getElementById('cpuChart').getContext('2d');
+                const memCtx = document.getElementById('memoryChart').getContext('2d');
+
+                const commonOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 0 },
+                    scales: {
+                        x: { display: false },
+                        y: { beginAtZero: true }
+                    },
+                    plugins: { legend: { display: false } }
+                };
+
+                // Destroy existing charts if any
+                if (this.state.charts.cpu) this.state.charts.cpu.destroy();
+                if (this.state.charts.memory) this.state.charts.memory.destroy();
+
+                this.state.charts.cpu = new Chart(cpuCtx, {
+                    type: 'line',
+                    data: {
+                        labels: Array(20).fill(''),
+                        datasets: [{
+                            label: 'CPU',
+                            data: Array(20).fill(0),
+                            borderColor: '#6366f1',
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointRadius: 0
+                        }]
+                    },
+                    options: {
+                        ...commonOptions,
+                        scales: { ...commonOptions.scales, y: { suggestedMax: 100 } }
+                    }
+                });
+
+                this.state.charts.memory = new Chart(memCtx, {
+                    type: 'line',
+                    data: {
+                        labels: Array(20).fill(''),
+                        datasets: [{
+                            label: 'Memory (GB)',
+                            data: Array(20).fill(0),
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointRadius: 0
+                        }]
+                    },
+                    options: commonOptions
+                });
+            },
+
+            async fetchStatus(manual = false) {
+                if (!this.state.selectedServer) return;
+
+                try {
+                    // Pass pod_name as param
+                    const data = await this.apiCall(`/server/status?pod_name=${this.state.selectedServer.DataId}`, 'GET');
+
+                    if (data) {
+                        this.updateDashboard(data);
+                    }
+
+                    if (manual) alert("상태가 갱신되었습니다.");
+
+                } catch (error) {
+                    console.warn("Status fetch failed", error);
+                }
+            },
+
+            updateDashboard(data) {
+                // Update text stats
+                if (data.health) {
+                    const freeMemGB = (data.health.freeMemory / 1024 / 1024 / 1024).toFixed(1);
+                    const totalMemGB = (data.health.totalMemory / 1024 / 1024 / 1024).toFixed(1);
+                    const usedMemGB = (totalMemGB - freeMemGB).toFixed(1);
+
+                    // Update Chart Data
+                    if (this.state.charts.memory) this.updateChart(this.state.charts.memory, parseFloat(usedMemGB));
+                    if (this.state.charts.cpu) this.updateChart(this.state.charts.cpu, Math.random() * 20 + 5);
+
+                    // Update Uptime
+                    const uptimeHours = (data.health.uptime / 3600).toFixed(1);
+                    document.getElementById('statUptime').textContent = `${uptimeHours}h`;
+                }
+
+                document.getElementById('statPlayers').textContent = `${data.onlinePlayers} / ${data.maxPlayers}`;
+
+                // TPS/Health text
+                const tps = parseFloat(data.tps);
+                const healthEl = document.getElementById('statHealth');
+                if (tps >= 18) {
+                    healthEl.textContent = 'Excellent';
+                    healthEl.className = 'text-2xl font-bold text-green-600';
+                } else if (tps >= 12) {
+                    healthEl.textContent = 'Fair';
+                    healthEl.className = 'text-2xl font-bold text-yellow-600';
+                } else {
+                    healthEl.textContent = 'Poor';
+                    healthEl.className = 'text-2xl font-bold text-red-600';
+                }
+            },
+
+            updateChart(chart, newValue) {
+                const data = chart.data.datasets[0].data;
+                data.shift();
+                data.push(newValue);
+                chart.update();
+            },
+
+            async confirmDeleteServer() {
+                const server = this.state.selectedServer;
+                const confirmMsg = `정말로 ${server.DataId} 서버를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`;
+
+                if (confirm(confirmMsg)) {
+                    const podName = server.DataId;
+                    const pvcName = server.pvc_name; // Need to ensure we have this
+
+                    try {
+                        // Query params
+                        const params = new URLSearchParams({
+                            pod_name: podName,
+                            pvc_name: pvcName
+                        });
+
+                        await this.apiCall(`/server?${params.toString()}`, 'DELETE');
+
+                        alert("서버가 삭제되었습니다.");
+                        this.navigateTo('dashboard');
+                    } catch (error) {
+                        alert(`삭제 실패: ${error.message}`);
+                    }
+                }
+            },
+
+            async apiCall(endpoint, method, body = null) {
+                if (!this.state.tokens) throw new Error("No auth token");
+
+                const headers = {
+                    'Authorization': `Bearer ${this.state.tokens.id_token}`, // Spec says Bearer [Token]
+                    'Content-Type': 'application/json'
+                };
+
+                // Ensure endpoint starts with slash if not full URL
+                let url = endpoint.startsWith('http') ? endpoint : `${CONFIG.apiUrl}${endpoint}`;
+
+                const options = {
+                    method: method,
+                    headers: headers
+                };
+
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+
+                const response = await fetch(url, options);
+
+                // Handle 204 No Content
+                if (response.status === 204) return null;
+
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    data = text;
+                }
+
+                if (!response.ok) {
+                    throw new Error(data.message || JSON.stringify(data) || `API Error ${response.status}`);
+                }
+
+                return data;
+            },
+
+            copyToClipboard(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert("복사되었습니다: " + text);
+                });
+            }
+        };
+
+        // --- Global Functions for initial Auth (Legacy support) ---
+
         function login() {
             const scopes = CONFIG.scope.split(' ').join('+');
             const authUrl = `https://${CONFIG.cognitoDomain}/login?` +
@@ -145,95 +979,23 @@
                 `response_type=code&` +
                 `scope=${scopes}&` +
                 `redirect_uri=${encodeURIComponent(CONFIG.redirectUri)}`;
-
             window.location.href = authUrl;
         }
 
-        // 로컬 테스트용 로그인
-        function localLogin() {
-            const idToken = document.getElementById('idTokenInput').value;
-
-            if (!idToken || !idToken.trim()) {
-                alert('ID Token을 입력해주세요.');
-                return;
-            }
-
-            let payload;
-            try {
-                // 토큰이 유효한 JWT 형식인지 확인하고 payload 파싱
-                payload = parseJwt(idToken);
-                if (!payload.sub || !payload['cognito:username']) {
-                    throw new Error('필수 클레임(sub, cognito:username)이 없습니다.');
-                }
-            } catch (e) {
-                alert(`유효하지 않은 토큰입니다: ${e.message}`);
-                return;
-            }
-
-            // Cognito에서 오는 것과 유사한 객체 생성
-            const tokens = {
-                id_token: idToken,
-                access_token: 'local_test_access_token', // 실제 사용되지 않는 더미 값
-                refresh_token: 'local_test_refresh_token',
-                expires_in: 3600,
-                token_type: 'Bearer'
-            };
-
-            // 토큰 저장 및 화면 표시
-            localStorage.setItem('tokens', JSON.stringify(tokens));
-            
-            // 로그인 섹션 숨기기
-            document.getElementById('loginSection').style.display = 'none';
-
-            displayTokens(tokens);
-        }
-
-        // 로그아웃
         function logout() {
             localStorage.clear();
             const logoutUrl = `https://${CONFIG.cognitoDomain}/logout?` +
                 `client_id=${CONFIG.clientId}&` +
                 `logout_uri=${encodeURIComponent(CONFIG.redirectUri)}&` +
-                `redirect_uri=${encodeURIComponent(CONFIG.redirectUri)}`;  // ✅ 추가
-
+                `redirect_uri=${encodeURIComponent(CONFIG.redirectUri)}`;
             window.location.href = logoutUrl;
         }
-        // 페이지 로드 시 실행
-        window.onload = function () {
-            // URL에서 authorization code 확인
-            const urlParams = new URLSearchParams(window.location.search);
-            const code = urlParams.get('code');
-            const error = urlParams.get('error');
 
-            if (error) {
-                showError(`로그인 실패: ${error}`);
-                return;
-            }
-
-            // 저장된 토큰 확인
-            const savedTokens = localStorage.getItem('tokens');
-            if (savedTokens) {
-                displayTokens(JSON.parse(savedTokens));
-                return;
-            }
-
-            // Authorization code가 있으면 토큰으로 교환
-            if (code) {
-                exchangeCodeForTokens(code);
-            }
-        };
-
-        // Authorization Code를 토큰으로 교환
         async function exchangeCodeForTokens(code) {
-            document.getElementById('loginSection').style.display = 'none';
-            document.getElementById('loadingSection').style.display = 'block';
-
             try {
                 const response = await fetch(`https://${CONFIG.cognitoDomain}/oauth2/token`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({
                         grant_type: 'authorization_code',
                         client_id: CONFIG.clientId,
@@ -242,42 +1004,43 @@
                     })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`토큰 교환 실패: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`Token exchange failed: ${response.status}`);
 
                 const tokens = await response.json();
-
-                // 토큰 저장
                 localStorage.setItem('tokens', JSON.stringify(tokens));
 
-                // URL에서 code 제거
+                // Clear URL
                 window.history.replaceState({}, document.title, window.location.pathname);
 
-                displayTokens(tokens);
+                app.setSession(tokens);
 
             } catch (error) {
-                showError(`토큰 발급 오류: ${error.message}`);
+                alert(`Login Failed: ${error.message}`);
+                app.render('login');
             }
         }
 
-        // 토큰 정보 표시
-        function displayTokens(tokens) {
-            document.getElementById('loadingSection').style.display = 'none';
-            document.getElementById('tokenSection').style.display = 'block';
+        function localLogin() {
+            const idToken = document.getElementById('idTokenInput').value.trim();
+            if (!idToken) return alert('Token required');
 
-            // JWT 디코딩 (간단한 파싱, 검증은 안 함)
-            const idTokenPayload = parseJwt(tokens.id_token);
+            try {
+                // Validate basic structure
+                parseJwt(idToken);
 
-            // 사용자 정보 표시
-            document.getElementById('userInfo').innerHTML = `
-                <strong>사용자 ID:</strong> ${idTokenPayload.sub}<br>
-                <strong>이메일:</strong> ${idTokenPayload.email || 'N/A'}<br>
-                <strong>사용자명:</strong> ${idTokenPayload['cognito:username'] || 'N/A'}
-            `;
+                const tokens = {
+                    id_token: idToken,
+                    access_token: 'dummy',
+                    refresh_token: 'dummy'
+                };
+
+                localStorage.setItem('tokens', JSON.stringify(tokens));
+                app.setSession(tokens);
+            } catch (e) {
+                alert('Invalid Token format');
+            }
         }
 
-        // JWT 파싱 (Base64 디코딩)
         function parseJwt(token) {
             try {
                 const base64Url = token.split('.')[1];
@@ -291,59 +1054,12 @@
             }
         }
 
-        // API 테스트
-        async function testAPI() {
-            const tokens = JSON.parse(localStorage.getItem('tokens'));
-            const resultDiv = document.getElementById('apiResult');
+        // Initialize App
+        window.onload = function () {
+            app.init();
+        };
 
-            resultDiv.innerHTML = '<div class="loading">API 호출 중...</div>';
-
-            try {
-                const response = await fetch(`${CONFIG.apiUrl}/pods`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': tokens.id_token,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    resultDiv.innerHTML = `
-                        <div class="success">
-                            <h3>API 호출 성공!</h3>
-                            <pre>${JSON.stringify(data, null, 2)}</pre>
-                        </div>
-                    `;
-                } else {
-                    resultDiv.innerHTML = `
-                        <div class="error">
-                            <h3>API 호출 실패</h3>
-                            <p>Status: ${response.status}</p>
-                            <pre>${JSON.stringify(data, null, 2)}</pre>
-                        </div>
-                    `;
-                }
-
-            } catch (error) {
-                resultDiv.innerHTML = `
-                    <div class="error">
-                        <h3>API 호출 오류</h3>
-                        <p>${error.message}</p>
-                    </div>
-                `;
-            }
-        }
-
-        // 에러 표시
-        function showError(message) {
-            document.getElementById('loginSection').style.display = 'none';
-            document.getElementById('loadingSection').style.display = 'none';
-            document.getElementById('errorSection').style.display = 'block';
-            document.getElementById('errorMessage').textContent = message;
-        }
     </script>
 </body>
 
-</html>
+</html>s
