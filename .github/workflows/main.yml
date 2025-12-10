@@ -20,14 +20,6 @@ jobs:
         with:
           node-version: '18' # 프로젝트 버전에 맞게 수정
 
-      # 3. 의존성 설치 및 빌드
-      - name: Install dependencies and Build
-        run: |
-          npm install
-          npm run build
-        # 주의: 빌드 결과물이 생기는 폴더가 'dist'인지 'build'인지 확인하세요!
-        # Vite를 쓰면 보통 'dist', CRA(Create React App)는 'build' 입니다.
-
       # 4. AWS 접속 설정
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
